@@ -5,6 +5,10 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class ClientHandler implements Runnable
 {
@@ -18,11 +22,15 @@ public class ClientHandler implements Runnable
     private DatagramSocket socketUDP;
     private byte[] buffer;
 
+    //Basic information
     private String user;
+    private static Queue<String> queue = new LinkedList<>();
+
+
 
     private ArrayList<String> questions;
 
-    public ClientHandler(Socket clientSocket)
+    public ClientHandler(Socket clientSocket, int portUDP)
     {
         this.clientSocket = clientSocket;
 
@@ -32,7 +40,7 @@ public class ClientHandler implements Runnable
             in = new DataInputStream(this.clientSocket.getInputStream());
 
             this.user = in.readUTF();
-            System.out.println(this.user);
+            //System.out.println(this.user);
 
             questions = new ArrayList<>();
             questions.add("1) What is 1 + 1");
@@ -41,7 +49,7 @@ public class ClientHandler implements Runnable
 
 
             //UDP
-            this.socketUDP = new DatagramSocket(5000);
+            this.socketUDP = new DatagramSocket(5000 + portUDP);
             buffer = new byte[256];
 
         } catch (IOException e)
@@ -85,6 +93,12 @@ public class ClientHandler implements Runnable
             closeEverything(clientSocket, in, out);
         }
     }
+
+    public synchronized void addQueue(String received)
+    {
+        queue.add(received);
+        System.out.println(queue.peek());
+    }
     @Override
     public void run()
     {
@@ -97,7 +111,10 @@ public class ClientHandler implements Runnable
                 socketUDP.receive(packet);
                 //System.out.println("Should receive");
                 String received = new String(packet.getData(), 0, packet.getLength());
-                System.out.println(received);
+                addQueue(received);
+                //System.out.println(queue.remove());
+                //System.out.println(received);
+
             } catch (IOException e)
             {
                 throw new RuntimeException(e);

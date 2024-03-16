@@ -30,6 +30,7 @@ public class ServerAccept implements Runnable
     {
         ExecutorService executorService = Executors.newCachedThreadPool();
         ExecutorService newClient = Executors.newCachedThreadPool();
+        int counter = 0;
         try
         {
             while (true)
@@ -42,11 +43,12 @@ public class ServerAccept implements Runnable
                 {
                     //make the thread of ClientHandler
                     addNum();
-                    ClientHandler clientHandler = new ClientHandler(clientSocket);
+                    ClientHandler clientHandler = new ClientHandler(clientSocket, counter);
                     addClient(clientHandler);
                     //clientHandler.broadCast();
                     sendClients();
                     executorService.execute(clientHandler);
+                    counter++;
                 }
             }
         } catch (IOException e)
